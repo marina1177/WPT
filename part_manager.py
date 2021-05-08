@@ -1,50 +1,109 @@
-from tkinter import *
 import ctypes
+from tkinter import *
+
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
-from matplotlib.backend_bases import key_press_handler
+	FigureCanvasTkAgg)
 from matplotlib.figure import Figure
-import numpy as np
+from numpy.ctypeslib import ndpointer
+
 from logic import *
 
-fields = ctypes.CDLL("./libfields.so")
-fields.calculate_kpd.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float,
-                                 ctypes.c_float, ctypes.POINTER(ctypes.POINTER(ctypes.c_double))]
-fields.calculate_kpd.restype = None #ctypes.POINTER(ctypes.c_double)
+
+# Init ctypes types
+DOUBLE = ctypes.c_double
+PDOUBLE = ctypes.POINTER(DOUBLE)
+PPDOUBLE = ctypes.POINTER(PDOUBLE)
+PPPDOUBLE = ctypes.POINTER(PPDOUBLE)
 
 
-# array_2d_double = npct.ndpointer(dtype=np.double,ndim=2, flags='CONTIGUOUS')
-# fields = npct.load_library("libfields.so", "./")
-fields.calculate_kpd.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float,
-                                 ctypes.c_float]
-fields.calculate_kpd.restype = None
-
-r1 = np.zeros(shape=(2*w+1,2*w+1)).astype(np.double)
+def convert_float(val):
+	try:
+		return float(val)
+	except ValueError:
+		return 0.0
 
 def getKPD(c, r1):
-	for j in range(0, 2 * w + 1):
+	kpdArr = []
+	for j in range(0,  w + 1):
 		kpd = 0
 		for p in range(0, 2 * j + 1):
 			for h in range(0, 2 * j + 1):
 				kpd = (kpd + r1[p, h] * r1[p, h] / (10.5 + 12 * 1.5 * c * c))
+				kpdArr.append((kpd))
+	return kpdArr
 
+
+fields = ctypes.CDLL("./libfields.so")
+c_power_fun = fields.calculate_fields
+# c_kpd_fun = fields.calculate_kpd
+c_power_fun.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float,
+                        ctypes.c_float, np.ctypeslib.ndpointer(dtype=np.float64,
+            ndim=2,
+            flags='C_CONTIGUOUS')]
+
+# c_kpd_fun.argtypes = [ctypes.c_float,
+#                       np.ctypeslib.ndpointer(dtype=np.float64,
+#                         ndim=2,
+#                         flags='C_CONTIGUOUS'),
+#                       np.ctypeslib.ndpointer(dtype=np.float64,
+#                         ndim=1,
+#                         flags='C_CONTIGUOUS')]
+c_power_fun.restype = None
+# c_kpd_fun.restype = None
+
+r1 = np.meshgrid(np.linspace(0, 1, 2 * w + 1), np.linspace(0, 1, 2 * w + 1))[0]
+kpdArray = np.meshgrid(np.linspace(0, 1, 2 * w + 1))[0]
 
 def calculate():
 	print("result")
-	if len(var1_text.get()) != 0 or len(var2_text.get()) != 0 or len(var3_text.get()) != 0 or len(
-			var4_text.get()) != 0 or len(var5_text.get()) != 0 or len(var6_text.get()) != 0:
-				r1= fields.calculate_kpd(float(var1_text.get()), float(var2_text.get()), float(var3_text.get()),
-		                           float(var4_text.get()), float(var5_text.get()), float(var6_text.get()))
 
-				for i in range(len(r1)):
-					print('r1_')
-				# kpd = getKPD(float(var3_text.get()),r1)
-				# print("from manager: " + str(kpd))
 
-		# kpd = fields.calculate_kpd(float(var1_text.get()), float(var2_text.get()), float(var3_text.get()),
-		#                            float(var4_text.get()), float(var5_text.get()), float(var6_text.get()))
-		# r1 = WPT(float(var1_text.get()), float(var2_text.get()), float(var3_text.get()),
-		#                    float(var4_text.get()), float(var5_text.get()), float(var6_text.get())).calc_fields()
+	c_power_fun(convert_float(var1_text.get()),
+	            convert_float(var2_text.get()),
+	            convert_float(var3_text.get()),
+	            convert_float(var4_text.get()),
+	            convert_float(var5_text.get()),
+	            convert_float(var6_text.get()),
+	            r1)
+
+	# kpd = getKPD(convert_float(var3_text.get()), r1)
+
+	power=[]
+	for p in range(0,w+1):
+		power.append(r1[p,0]*r1[p,0])
+
+	# Plots
+	#Power
+	fig = Figure(figsize=(5, 4), dpi=100)
+	t = np.arange(0, 151, 1)
+	fig.add_subplot(111).plot(t,power)
+
+	canvas = FigureCanvasTkAgg(fig, master=app)
+	canvas.draw()
+	canvas.get_tk_widget().grid(row=4, column=0, columnspan=3, sticky=W, pady=10, padx=10)
+
+	# KPD
+	kpdArr = []
+	x=[]
+	c= convert_float(var3_text.get())
+
+	for j in range(0, w + 1):
+		kpd = 0
+		for p in range(0, 2 * j + 1):
+			for h in range(0, 2 * j + 1):
+				x.append(j)
+				kpd = (kpd + r1[p, h] * r1[p, h] / (10.5 + 12 * 1.5 * c * c))
+				kpdArr.append((kpd))
+
+	print("size kpdAr: "+str(len(kpdArr)))
+	fig_kpd = Figure(figsize=(5, 4), dpi=100)
+
+	fig_kpd.add_subplot(111).plot(x, kpdArr)
+
+	canvas = FigureCanvasTkAgg(fig_kpd, master=app)
+	canvas.draw()
+	canvas.get_tk_widget().grid(row=4, column=3, columnspan=3, sticky=W, pady=10, padx=10)
 
 
 def clear_text():
@@ -58,11 +117,11 @@ app = Tk()
 # a
 var1_text = StringVar()
 var1_label = Label(app,
-                   text='a',
+                   text='a\nширина модуля[м]',
                    fg="white",
                    background="#34A2FE",
-                   width=4,
-                   height=2,
+                   width=14,
+                   height=4,
 font = ('bold', 14))
 var1_label.grid(row=0, column=0, sticky=E, pady=10, padx=10)
 
@@ -71,11 +130,11 @@ var1_entry.grid(row=0, column=1, sticky=W, padx=10)
 
 # b
 var2_text = StringVar()
-var2_label = Label(app, text='b',
+var2_label = Label(app, text='b\nдлина модуля[м]',
                    fg="white",
                    background="#34A2FE",
-                   width=4,
-                   height=2, font=('bold', 14))
+                   width=14,
+                   height=4, font=('bold', 14))
 var2_label.grid(row=0, column=2, sticky=E)
 var2_entry = Entry(app, textvariable=var2_text)
 var2_entry.grid(row=0, column=3,sticky=E, padx=10)
@@ -106,11 +165,11 @@ var4_entry.grid(row=1, column=3,sticky=E, padx=10)
 
 # lambda
 var5_text = StringVar()
-var5_label = Label(app, text='λ',
+var5_label = Label(app, text='λ\nдлина волны[м]',
                    fg="white",
                    background="#34A2FE",
-                   width=4,
-                   height=2,
+                   width=14,
+                   height=4,
                    font=('bold', 14))
 var5_label.grid(row=2, column=0, sticky=E, pady=10, padx=10)
 var5_entry = Entry(app, textvariable=var5_text)
@@ -118,11 +177,11 @@ var5_entry.grid(row=2, column=1,sticky=W,padx=10)
 
 # D
 var6_text = StringVar()
-var6_label = Label(app, text='D',
+var6_label = Label(app, text='D\nрасстояние до приемника[м]',
                    fg="white",
                    background="#34A2FE",
-                   width=4,
-                   height=2,
+                   width=22,
+                   height=4,
                    font=('bold', 14))
 var6_label.grid(row=2, column=2, sticky=E)
 var6_entry = Entry(app, textvariable=var6_text)
@@ -136,20 +195,28 @@ clear_btn = Button(app, text="Clear Input", width=12, command=clear_text)
 clear_btn.grid(row=3, column=2, pady=20)
 
 
-# Plot
-fig = Figure(figsize=(5, 4))
+# normalize and convert to dB
+dbnorm = lambda x: 20*np.log10(np.abs(x)/np.max(x));
 
-t = np.arange(0, 3, .01)
-fig.add_subplot(111)
-	#.plot(t, 2 * np.sin(2 * np.pi * t))
+# generate example data
+# some angles
+alpha = np.arange(-90, 90, 0.01);
+x = np.deg2rad(alpha)
+dir_function = dbnorm(np.sinc(x))
 
-canvas = FigureCanvasTkAgg( master=app)  # A tk.DrawingArea.
-canvas.draw()
-canvas.get_tk_widget().grid(row=4, column=0,columnspan=3, sticky=W, pady=10, padx=10)
-
+# plot
+# ax = pp.subplot(111, polar=True)
+# # set zero north
+# ax.set_theta_zero_location('N')
+# ax.set_theta_direction('clockwise')
+# pp.plot(np.deg2rad(alpha), dir_function)
+# ax.set_ylim(-20,0)
+# ax.set_yticks(np.array([-20, -12, -6, 0]))
+# ax.set_xticks(np.array([0, -45, -90, np.nan, np.nan, np.nan, 90, 45])/180*np.pi)
+# pp.show()
 
 app.wm_title('WPT calculator')
-app.geometry('1000x800')
+app.geometry('1200x800')
 
 
 # start programm

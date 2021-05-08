@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #define _USE_MATH_DEFINES // for C
 #include <math.h>
+//#include "fields.h"
 
 
 
@@ -10,42 +11,42 @@ int w = 150;
 int S = 51;
 int V = 51;
 
-static void	free_arr(double **arr, int i)
-{
-	while (i > -1)
-		free(arr[i--]);
-	free(arr);
-}
+//static void	free_arr(double **arr, int i)
+//{
+//	while (i > -1)
+//		free(arr[i--]);
+//	free(arr);
+//}
+//
+//double		*ft_doublearrnew(int size)
+//{
+//	double *arr;
+//
+//	arr = (double *)malloc(sizeof(double) * size);
+//	return (arr);
+//}
+//
+//double			**ft_doublematrixnew(int rows, int columns)
+//{
+//	double		**matrix;
+//	int		i;
+//
+//	if (!(matrix = (double **)malloc(sizeof(double *) * rows)))
+//		return (NULL);
+//	i = 0;
+//	while (i < rows)
+//	{
+//		if (!(matrix[i] = ft_doublearrnew(columns)))
+//		{
+//			free_arr(matrix, i - 1);
+//			return (NULL);
+//		}
+//		i++;
+//	}
+//	return (matrix);
+//}
 
-double		*ft_doublearrnew(int size)
-{
-	double *arr;
-
-	arr = (double *)malloc(sizeof(double) * size);
-	return (arr);
-}
-
-double			**ft_doublematrixnew(int rows, int columns)
-{
-	double		**matrix;
-	int		i;
-
-	if (!(matrix = (double **)malloc(sizeof(double *) * rows)))
-		return (NULL);
-	i = 0;
-	while (i < rows)
-	{
-		if (!(matrix[i] = ft_doublearrnew(columns)))
-		{
-			free_arr(matrix, i - 1);
-			return (NULL);
-		}
-		i++;
-	}
-	return (matrix);
-}
-
-// create a 2d array from the 1d one
+//// create a 2d array from the 1d one
 double ** convert2d(unsigned long len1, unsigned long len2, double * arr) {
     double ** ret_arr;
 
@@ -61,10 +62,44 @@ double ** convert2d(unsigned long len1, unsigned long len2, double * arr) {
     return ret_arr;
 }
 
+void calculate_kpd(float c, double *list, double *kpd){
+	////       Расчет КПД.
+	double kpd_tmp;
 
-void calculate_kpd(float a, float b, float c, float e, float lambda, float D, double **r1){
-    long double kpd = 0;
+	double **r1 = convert2d(2*w+1,2*w+1, list);
+        for (int j = 0; j <= w; j++) {
+          kpd_tmp = 0;
+            for (int p = 0; p <= 2*j; p++) {
+                for (int h = 0; h <= 2*j; h++) {
+                    kpd_tmp = (kpd_tmp + r1[p][h] * r1[p][h] / (10.5 + 12 * 1.5 * c * c));
+                    kpd
+                }
+            }
+
+        }
+}
+
+
+void calculate_fields(float a, float b, float c, float e, float lambda, float D, double *list){
+
+
+    if( a == 0){
+    a = 1;}
+    if( b == 0){
+    b = 1;}
+    if(c == 0){
+    c = 1;}
+    if( e == 0){
+    e = 1;}
+    if( D == 0){
+    D = 1000;}
+    if( lambda == 0){
+    lambda = 0.12;}
+
+
 //	double **r1 = ft_doublematrixnew(2*w+1,2*w+1);
+
+	double **r1 = convert2d(2*w+1,2*w+1, list);
 
 for(int j = 0; j <= 2*w; j++)
 {
@@ -85,8 +120,6 @@ for (int p = 0; p<=w ; p++){
     int h = 0;
     int u = 0;
     int o = 0;
-
-//    for(int h = 0; h<=w;h++){
 
     memset (tArray, 0, size*sizeof(double));
     memset (gArray, 0, size*sizeof(double));
@@ -605,29 +638,24 @@ for (int p = 0; p<=w ; p++){
                     + hArray[18] * cos(kArray[18] - kArray[0]);
 
             //        Вывод результатов.
-            printf("p: %d\n" , p);
-            printf("h: %d\n" , h);
-            printf("r1^2: %f\n",r1[p][h]*r1[p][h]);
-
+//            printf("p: %d\n" , p);
+//            printf("h: %d\n" , h);
+//            printf("r1^2: %f\n",r1[p][h]*r1[p][h]);
 
 	}
-
-////       Расчет КПД.
-//        printf("Calculate KPD\n");
-//        for (int j = 0; j <= w; j++) {
-//            kpd = 0;
-//            for (int p = 0; p < 2*j; p++) {
-//                for (int h = 0; h < 2*j; h++) {
-////                    printf("%d: %d,%d\n", j, p,h);
-//                    kpd = (kpd + r1[p][h] * r1[p][h] / (10.5 + 12 * 1.5 * c * c));
-////                    printf("kpd: %Lf\n" ,kpd);
-//                }
-//            }
-//
-//        }
-//    printf("kpd: %Lf\n" ,kpd);
-//    return(r1);
 }
+
+
+//int h =0;
+//double sum = 0;
+//	for (int p = 0; p<=w; p++){
+//	sum +=r1[p][h];
+//	printf("r1[%d][%d]: %f\n",p,h,r1[p][h]);
+//	}
+//	printf("\n_sum  %f \n", sum);
+
+//    return(r1);
+
 
 
 //int			main(int argc, char **argv)
