@@ -47,7 +47,7 @@ int V = 51;
 //}
 
 //// create a 2d array from the 1d one
-double ** convert2d(unsigned long len1, unsigned long len2, double * arr) {
+double **convert2d(unsigned long len1, unsigned long len2, double * arr) {
     double ** ret_arr;
 
     // allocate the additional memory for the additional pointers
@@ -65,6 +65,10 @@ double ** convert2d(unsigned long len1, unsigned long len2, double * arr) {
 void calculate_kpd(float c, double *list, double *kpd){
 	////       Расчет КПД.
 	double kpd_tmp;
+	if(c == 0)
+	{
+        c = sqrt(0.6);
+    }
 
 	double **r1 = convert2d(2*w+1,2*w+1, list);
         for (int j = 0; j <= w; j++) {
@@ -72,10 +76,9 @@ void calculate_kpd(float c, double *list, double *kpd){
             for (int p = 0; p <= 2*j; p++) {
                 for (int h = 0; h <= 2*j; h++) {
                     kpd_tmp = (kpd_tmp + r1[p][h] * r1[p][h] / (10.5 + 12 * 1.5 * c * c));
-                    kpd
+                    kpd[j]=kpd_tmp;
                 }
             }
-
         }
 }
 
@@ -88,7 +91,7 @@ void calculate_fields(float a, float b, float c, float e, float lambda, float D,
     if( b == 0){
     b = 1;}
     if(c == 0){
-    c = 1;}
+    c = sqrt(0.6);}
     if( e == 0){
     e = 1;}
     if( D == 0){
@@ -97,47 +100,44 @@ void calculate_fields(float a, float b, float c, float e, float lambda, float D,
     lambda = 0.12;}
 
 
-//	double **r1 = ft_doublematrixnew(2*w+1,2*w+1);
-
 	double **r1 = convert2d(2*w+1,2*w+1, list);
 
-for(int j = 0; j <= 2*w; j++)
-{
-    for(int i = 0; i <= 2*w; i++)
-    {  
-        r1[i][j] = 0;
-    }
-}
+	for(int j = 0; j <= 2*w; j++)
+	{
+        for(int i = 0; i <= 2*w; i++)
+        {
+            r1[i][j] = 0;
+        }
+	}
 
-int size = 19;
-double tArray[size];
-double gArray[size];
-double hArray[size];
-double kArray[size];
+	int size = 19;
+	double tArray[size];
+	double gArray[size];
+	double hArray[size];
+	double kArray[size];
 
 
-for (int p = 0; p<=w ; p++){
-    int h = 0;
-    int u = 0;
-    int o = 0;
+	for (int p = 0; p<=w ; p++){
+//	for(int h = 0; h<=w;h++){
+        int h = 0;
+//        int u = 0;
+//        int o = 0;
 
-    memset (tArray, 0, size*sizeof(double));
-    memset (gArray, 0, size*sizeof(double));
-    memset (hArray, 0, size*sizeof(double));
-    memset (kArray, 0, size*sizeof(double));
+        memset (tArray, 0, size*sizeof(double));
+        memset (gArray, 0, size*sizeof(double));
+        memset (hArray, 0, size*sizeof(double));
+        memset (kArray, 0, size*sizeof(double));
 
 //            Расчет полей излучения отдельных модулей.
 //            #1
-           //printf("FIELD_1\n");
 
-           for (int n = -(S / 2); n <= (S - 2) / 2; n++) {
-
-                for (int m = -(V / 2); m <= (V - 2) / 2; m++) {
+           for (int n = -(S / 2); n <=((S - 2) / 2); n++) {
+                for (int m = -(V / 2); m <= ((V - 2) / 2); m++) {
                     tArray[0] = tArray[0]
-                            + ((a + b) / (S * V))
+                            + ((a * b) / (S * V))
                             * cos((2 * M_PI/ (lambda * D))
                             * (((2 * n + 1) * (p) * a / (2 * S))
-                            + ((2 * m + 1) * b * h / (2 * V))));
+                            + ((2 * m + 1) * h * b / (2 * V))));
 
                     gArray[0] = gArray[0]
                             + ((a * b) / (S * V))
@@ -341,7 +341,6 @@ for (int p = 0; p<=w ; p++){
             }
 //            -----------------
 //            #12
-            //printf("FIELD_12\n");
             for (int n = (-S / 2); n <= (S - 2) / 2; n++) {
                 for (int m = -(5 * V / 2); m <= ((-3 * V - 2) / 2); m++) {
                     tArray[11] = tArray[11]
@@ -360,7 +359,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #13
-            //printf("FIELD_13\n");
             for (int n = (-3 * S / 2); n <= (-S - 2) / 2; n++) {
                 for (int m = -(2 * V / 2); m <= ((-V - 1) / 2); m++) {
                     tArray[12] = tArray[12]
@@ -379,7 +377,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #14
-            //printf("FIELD_14\n");
             for (int n = (-5 * S / 2); n <= ((-3 * S - 2) / 2); n++) {
                 for (int m = -(3 * V / 2); m <= ((-V - 2) / 2); m++) {
 
@@ -399,7 +396,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #15
-            //printf("FIELD_15\n");
             for (int n = (-5 * S / 2); n <= ((-3 * S - 2) / 2); n++) {
                 for (int m = -(V / 2); m <= ((V - 2) / 2); m++) {
                     tArray[14] = tArray[14]
@@ -418,7 +414,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #16
-            //printf("FIELD_16\n");
             for (int n = (-5 * S / 2); n <= ((-3 * S - 2) / 2); n++) {
                 for (int m = (V / 2); m <= ((3 * V - 2) / 2); m++) {
                     tArray[15] = tArray[15]
@@ -437,7 +432,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #17
-            //printf("FIELD_17\n");
             for (int n = (-3 * S / 2); n <= ((-S - 2) / 2); n++) {
                 for (int m = (V); m <= (2 * V - 1); m++) {
 
@@ -457,7 +451,6 @@ for (int p = 0; p<=w ; p++){
             }
 //            -----------------
 //            #18
-            //printf("FIELD_18\n");
             for (int n = (-S / 2); n <= ((S - 2) / 2); n++) {
                 for (int m = (3 * V / 2); m <= ((5 * V - 2) / 2); m++) {
                     tArray[17] = tArray[17]
@@ -476,7 +469,6 @@ for (int p = 0; p<=w ; p++){
 
 //            -----------------
 //            #19
-            //printf("FIELD_19\n");
             for (int n = (S / 2); n <= ((3 * S - 2) / 2); n++) {
                 for (int m = (V); m <= (2 * V - 1); m++) {
                     tArray[18] = tArray[18]
@@ -492,7 +484,6 @@ for (int p = 0; p<=w ; p++){
                             + ((2 * m + 1) * b * h / (2 * V))));
                 }
             }
-
 
             //        Расчет фазового распределения.
             //printf("PHASE_1\n");
@@ -592,7 +583,8 @@ for (int p = 0; p<=w ; p++){
 
 
 //            Расчет амплитудного распределения
-            //printf("AMPLITUDES\n");
+
+            double cce= 0.6*e;
             hArray[0] = sqrt((e / (lambda * D * lambda * D)) * (pow(tArray[0], 2) + pow(gArray[0], 2)));
             hArray[1] = sqrt((e / (lambda * D * lambda * D)) * (pow(tArray[1], 2) + pow(gArray[1], 2)));
             hArray[2] = sqrt((e / (lambda * D * lambda * D)) * (pow(tArray[2], 2) + pow(gArray[2], 2)));
@@ -616,7 +608,6 @@ for (int p = 0; p<=w ; p++){
 
 //            Расчет суммарного поля.
 
-            //printf("RESULT FIELD:\n");
             r1[p][h] = hArray[0]
                     + hArray[1] * cos(kArray[1] - kArray[0])
                     + hArray[2] * cos(kArray[2] - kArray[0])
@@ -637,12 +628,9 @@ for (int p = 0; p<=w ; p++){
                     + hArray[17] * cos(kArray[17] - kArray[0])
                     + hArray[18] * cos(kArray[18] - kArray[0]);
 
-            //        Вывод результатов.
-//            printf("p: %d\n" , p);
-//            printf("h: %d\n" , h);
-//            printf("r1^2: %f\n",r1[p][h]*r1[p][h]);
 
 	}
+	//}
 }
 
 
